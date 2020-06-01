@@ -1,0 +1,13 @@
+extends layout
+
+block head
+    title 로그인 페이지
+
+block content
+    h1 로그인
+    form(action='/login' method='post')
+        p
+            input(type='text' name='email')
+        p
+            input(type='password' name='password')
+        button(type='submit') 로그인
