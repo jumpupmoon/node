@@ -6,5 +6,13 @@
 
     <body>
         <%- include("./nav.ejs") %>
+
+        <div class="container">
+            <% if (email) { %>
+                <h2>Welcome! <%=email %></h2>
+            <% } else { %>
+                <h2>Please Login!</h2>
+            <% } %>
+        </div>
     </body>
 </html>
