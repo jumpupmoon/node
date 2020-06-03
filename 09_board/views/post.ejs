@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <%- include("./head.ejs") %>
+    </head>
+
+    <body>
+        <%- include("./nav.ejs") %>
+
+        <div class="container">
+            <div class="form-group">
+                <label for="inputId">번호</label>
+                <input type="text" class="form-control" id="inputId" disabled value="<%=post.post_id %>">
+            </div>
+            <div class="form-group">
+                <label for="inputUser">작성자</label>
+                <input type="text" class="form-control" id="inputUser" disabled value="<%=post.email %>">
+            </div>
+            <div class="form-group">
+                <label for="inputTitle">제목</label>
+                <input type="text" class="form-control" id="inputTitle" disabled value="<%=post.title %>">
+            </div>
+            <div class="form-group">
+                <label for="inputContents">내용</label>
+                <textarea class="form-control" id="inputContents" disabled rows="10"><%=post.contents %></textarea>
+            </div>
+            <% if(post.email == user.email) { %>
+                <button type="button" class="btn btn-danger" onclick="location.href='/post/delete/<%=post.post_id %>'">삭제</button>
+            <% } %>
+        </div>
+
+    </body>
+</html>
