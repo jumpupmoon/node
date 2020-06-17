@@ -16,19 +16,23 @@
                         <th scope="col">번호</th>
                         <th scope="col">제목</th>
                         <th scope="col">작성자</th>
+                        <th scope="col">조회수</th>
+                        <th scope="col">좋아요</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <% for(var post of posts) { %>
+                    <% posts.forEach(function(post, index) { %>
                         <tr onclick="location.href='/post/<%=post.post_id %>'">
-                            <th scope="row"><%=post.post_id %></th>
+                            <th scope="row"><%=posts.length-index %></th>
                             <td><%=post.title %></td>
                             <td><%=post.email %></td>
+                            <td><%=post.hit %></td>
+                            <td><%=post.likes %></td>
                         </tr>
-                    <% } %>
+                    <% }) %>
                 </tbody>
             </table>
-
+            
             <button type="button" class="btn btn-primary" onclick="location.href='/posts/create'">글쓰기</button>
         </div>
     </body>

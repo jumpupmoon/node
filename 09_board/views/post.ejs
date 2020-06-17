@@ -9,12 +9,12 @@
 
         <div class="container">
             <div class="form-group">
-                <label for="inputId">번호</label>
-                <input type="text" class="form-control" id="inputId" disabled value="<%=post.post_id %>">
-            </div>
-            <div class="form-group">
                 <label for="inputUser">작성자</label>
                 <input type="text" class="form-control" id="inputUser" disabled value="<%=post.email %>">
+            </div>
+            <div class="form-group">
+                <label for="inputHit">조회수</label>
+                <input type="text" class="form-control" id="inputHit" disabled value="<%=post.hit %>">
             </div>
             <div class="form-group">
                 <label for="inputTitle">제목</label>
@@ -24,8 +24,15 @@
                 <label for="inputContents">내용</label>
                 <textarea class="form-control" id="inputContents" disabled rows="10"><%=post.contents %></textarea>
             </div>
-            <% if(post.email == user.email) { %>
+            <button type="button" class="btn btn-info" onclick="location.href='/posts'">목록</button>
+            <% if(post.user_id == user.id) { %>
+                <button type="button" class="btn btn-secondary" onclick="location.href='/post/edit/<%=post.post_id %>'">수정</button>
                 <button type="button" class="btn btn-danger" onclick="location.href='/post/delete/<%=post.post_id %>'">삭제</button>
+            <% } 
+            if(!like) { %>
+                <i class="fas fa-heart" style="font-size: 25px;" onclick="location.href='/post/like/<%=post.post_id %>'"></i>
+            <% } else { %>
+                <i class="far fa-heart" style="font-size: 25px;" onclick="location.href='/post/hate/<%=post.post_id %>'"></i>
             <% } %>
         </div>
 

@@ -1,12 +1,13 @@
+var http = require('http');
 var express = require('express');
 var app = express();
-var port = 3000;
+var server = http.createServer(app);
+var port = 3333;
 var path = require('path');
 var session = require('express-session');
 
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
-app.set(express.static(path.join(__dirname, 'public')));
 
 app.use(express.json());
 app.use(express.urlencoded({extended: false}));
@@ -140,8 +141,11 @@ app.get('/posts', function(req, res) {
     }
 
     connection.query(
-        `SELECT post_id, title, email FROM posts 
-            LEFT JOIN users ON user_id = users.id`,
+        `SELECT p.post_id, title, email, hit, COUNT(l.post_id) likes FROM posts p
+            LEFT JOIN users u ON p.user_id = id
+            LEFT JOIN likes l ON p.post_id = l.post_id
+            GROUP BY l.post_id, p.post_id
+            ORDER BY p.post_id DESC`,
         function(err, rows) {
             if(err) {
                 console.log(err);
@@ -165,7 +169,7 @@ app.get('/post/:postId', function(req, res) {
 
     const postId = Number(req.params.postId);
     connection.query(
-        `SELECT post_id, title, contents, email FROM posts
+        `SELECT post_id, title, contents, email, user_id, hit FROM posts
             LEFT JOIN users ON user_id = users.id
             WHERE post_id = ?`,
         [postId],
@@ -177,10 +181,38 @@ app.get('/post/:postId', function(req, res) {
                 console.log('post 없음')
                 res.render('error');
             } else {
-                res.render('post', {
-                    user: req.session.loggedIn,
-                    post: rows[0]
-                });
+                connection.query(
+                    'UPDATE posts SET hit = hit+1 WHERE post_id = ? and user_id != ?', 
+                    [postId, req.session.loggedIn.id],
+                    function(err2, hit) {
+                        if(err2) {
+                            console.log(err2);
+                            res.render('error');
+                        } else {
+                            if(hit.changedRows > 0) rows[0].hit +=1;
+
+                            connection.query(
+                                'SELECT user_id FROM likes WHERE post_id =? and user_id =?',
+                                [postId, req.session.loggedIn.id],
+                                function(err3, like) {
+                                    if(err3) {
+                                        console.log(err2);
+                                        res.render('error');
+                                    } else {
+                                        var like;
+                                        if(like.length > 0) like = true;
+                                        else like = false;
+                                        res.render('post', {
+                                            user: req.session.loggedIn,
+                                            post: rows[0],
+                                            like: like
+                                        });
+                                    }
+                                }
+                            )
+                        }
+                    }
+                )
             }
         }
     )
@@ -215,7 +247,11 @@ app.get('/posts/create', function(req, res) {
         return
     }
 
-    res.render('editPost', {user: req.session.loggedIn});
+    res.render('editPost', {
+        user: req.session.loggedIn,
+        post: {title: '', contents: ''},
+        action: '/posts/create'
+    });
 })
 
 //글쓰기 처리
@@ -236,6 +272,103 @@ app.post('/posts/create', function(req, res) {
                 res.render('error');
             } else {
                 res.redirect('/posts');
+            }
+        }
+    )
+})
+
+// 글 수정 화면
+app.get('/post/edit/:postId', function(req, res) {
+    if(!req.session.loggedIn) {
+        res.redirect('/logout');
+        return
+    }
+
+    const postId = req.params.postId;
+    connection.query(
+        `SELECT * FROM posts 
+            WHERE user_id = ? and post_id = ?`,
+        [req.session.loggedIn.id, postId],
+        function(err, rows) {
+            if(err) {
+                console.log(err);
+                res.render('error');
+            } else if(rows.length < 1) {
+                res.render('eroor');
+            } else {
+                res.render('editPost', {
+                    user: req.session.loggedIn,
+                    post: rows[0],
+                    action: '/post/edit/'+postId
+                })
+            }
+        }
+    )
+})
+
+// 글 수정 처리
+app.post('/post/edit/:postId', function(req, res) {
+    if(!req.session.loggedIn) {
+        res.redirect('/logout');
+        return
+    }
+
+    const title = req.body.title;
+    const contents = req.body.contents;
+    const postId = req.params.postId;
+    connection.query(
+        'UPDATE posts SET title = ?, contents = ? WHERE post_id = ?',
+        [title, contents, postId],
+        function(err, rows) {
+            if(err) {
+                console.log(err);
+                res.render('error');
+            } else {
+                res.redirect('/post/'+postId);
+            }
+        }
+    )
+})
+
+// 좋아요
+app.get('/post/like/:postId', function(req, res) {
+    if(!req.session.loggedIn) {
+        res.redirect('/logout');
+        return
+    }
+
+    const postId = req.params.postId;
+    connection.query(
+        'INSERT INTO likes(post_id, user_id) VALUES(?, ?)',
+        [postId, req.session.loggedIn.id],
+        function(err) {
+            if(err) {
+                console.log(err);
+                res.render('error');
+            } else {
+                res.redirect('/post/'+postId);
+            }
+        }
+    )
+})
+
+// 좋아요 취소
+app.get('/post/hate/:postId', function(req, res) {
+    if(!req.session.loggedIn) {
+        res.redirect('/logout');
+        return
+    }
+
+    const postId = req.params.postId;
+    connection.query(
+        'DELETE FROM likes WHERE post_id =? AND user_id = ?',
+        [postId, req.session.loggedIn.id],
+        function(err) {
+            if(err) {
+                console.log(err);
+                res.render('error');
+            } else {
+                res.redirect('/post/'+postId);
             }
         }
     )
