@@ -1,7 +1,6 @@
 var http = require('http');
 var express = require('express');
 var app = express();
-var server = http.createServer(app);
 var port = 3333;
 var path = require('path');
 var session = require('express-session');
@@ -101,9 +100,9 @@ app.post('/signup', function(req, res) {
                     `INSERT INTO users(email, password, age)
                         VALUES (?, ?, ?)`,
                     [email, password, age],
-                    function(err2, result) {
-                        if(err2) { // 회원가입 오류
-                            console.log('err -> ', err2);
+                    function(err, result) {
+                        if(err) { // 회원가입 오류
+                            console.log('err -> ', err);
                             res.render('signup', {errorMessage: '생성 오류', user: req.session.loggedIn});
                         } else { // 회원가입 성공
                             res.redirect('/login');
@@ -139,13 +138,14 @@ app.get('/posts', function(req, res) {
         res.redirect('/logout');
         return
     }
-
+    
     connection.query(
-        `SELECT p.post_id, title, email, hit, COUNT(l.post_id) likes FROM posts p
-            LEFT JOIN users u ON p.user_id = id
-            LEFT JOIN likes l ON p.post_id = l.post_id
-            GROUP BY l.post_id, p.post_id
-            ORDER BY p.post_id DESC`,
+        `SELECT p.post_id, title, email, hit
+            , (SELECT COUNT(l.post_id) FROM likes l WHERE l.post_id = p.post_id ) likes
+            , (SELECT COUNT(c.post_id) FROM comments c WHERE c.post_id = p.post_id) comms 
+        FROM posts p
+        LEFT JOIN users u ON p.user_id = u.id
+        ORDER BY p.post_id DESC`,
         function(err, rows) {
             if(err) {
                 console.log(err);
@@ -184,9 +184,9 @@ app.get('/post/:postId', function(req, res) {
                 connection.query(
                     'UPDATE posts SET hit = hit+1 WHERE post_id = ? and user_id != ?', 
                     [postId, req.session.loggedIn.id],
-                    function(err2, hit) {
-                        if(err2) {
-                            console.log(err2);
+                    function(err, hit) {
+                        if(err) {
+                            console.log(err);
                             res.render('error');
                         } else {
                             if(hit.changedRows > 0) rows[0].hit +=1;
@@ -194,19 +194,35 @@ app.get('/post/:postId', function(req, res) {
                             connection.query(
                                 'SELECT user_id FROM likes WHERE post_id =? and user_id =?',
                                 [postId, req.session.loggedIn.id],
-                                function(err3, like) {
-                                    if(err3) {
-                                        console.log(err2);
+                                function(err, like) {
+                                    if(err) {
+                                        console.log(err);
                                         res.render('error');
                                     } else {
                                         var like;
                                         if(like.length > 0) like = true;
                                         else like = false;
-                                        res.render('post', {
-                                            user: req.session.loggedIn,
-                                            post: rows[0],
-                                            like: like
-                                        });
+
+                                        connection.query(
+                                            `SELECT comm_id, email, description, user_id FROM comments
+                                                LEFT JOIN users ON user_id = users.id
+                                                WHERE post_id = ?
+                                                ORDER BY comm_id DESC`,
+                                            [postId],
+                                            function(err, comms) {
+                                                if(err) {
+                                                    console.log(err);
+                                                    res.render('error');
+                                                } else {
+                                                    res.render('post', {
+                                                        user: req.session.loggedIn,
+                                                        post: rows[0],
+                                                        like: like,
+                                                        comms: comms
+                                                    });
+                                                }
+                                            }
+                                        )
                                     }
                                 }
                             )
@@ -363,6 +379,53 @@ app.get('/post/hate/:postId', function(req, res) {
     connection.query(
         'DELETE FROM likes WHERE post_id =? AND user_id = ?',
         [postId, req.session.loggedIn.id],
+        function(err) {
+            if(err) {
+                console.log(err);
+                res.render('error');
+            } else {
+                res.redirect('/post/'+postId);
+            }
+        }
+    )
+})
+
+// 댓글 등록
+app.post('/comment', function(req, res) {
+    if(!req.session.loggedIn) {
+        res.redirect('/logout');
+        return
+    }
+
+    const postId = req.body.postId;
+    const desc = req.body.desc;
+    connection.query(
+        `INSERT INTO comments(post_id, user_id, description) 
+            VALUES(?, ?, ?)`,
+        [postId, req.session.loggedIn.id, desc],
+        function(err) {
+            if(err) {
+                console.log(err);
+                res.render('error');
+            } else {
+                res.redirect('/post/'+postId);
+            }
+        }
+    )
+})
+
+// 댓글 삭제
+app.get('/comment/delete/:postId/:commId', function(req, res) {
+    if(!req.session.loggedIn) {
+        res.redirect('/logout');
+        return
+    }
+
+    const commId = req.params.commId;
+    const postId = req.params.postId;
+    connection.query(
+        'DELETE FROM comments WHERE comm_id =?',
+        [commId],
         function(err) {
             if(err) {
                 console.log(err);

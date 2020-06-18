@@ -24,7 +24,13 @@
                     <% posts.forEach(function(post, index) { %>
                         <tr onclick="location.href='/post/<%=post.post_id %>'">
                             <th scope="row"><%=posts.length-index %></th>
-                            <td><%=post.title %></td>
+                            <td>
+                                <%=post.title %>
+                                <% if(post.comms > 0) { %>
+                                    <i class="far fa-comment-dots"></i>
+                                    <%= post.comms %>
+                                <% } %>
+                            </td>
                             <td><%=post.email %></td>
                             <td><%=post.hit %></td>
                             <td><%=post.likes %></td>

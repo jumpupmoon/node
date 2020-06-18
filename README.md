@@ -610,3 +610,60 @@ app.get("/login", function (req, res) {
 ```
 npm i --save express ejs mysql2 express-session
 ```
+
+## 게시판
+- 글쓰기 (create) O
+- 글 수정 (update) -> 작성자만
+- 글 삭제 (delete) O -> 작성자만 
+- 글 불러오기 (read) - 1개씩 O
+- 목록 O
+- 게시판은 로그인한 유저만 접근 가능하도록 O
+
+```
+npm i --save express ejs mysql2 express-session
+```
+
+### 조회수
+- 처음 만들어진 글 조회수가 0
+- 글을 읽을 때마다 조회수 +1
+    (+ 작성자 이외)
+- 글 <- 조회수 -> post 테이블 안에 column 추가
+1. [O] post 테이블에 `view_count` column 추가
+    - int / default=0 / not null 
+2. [O] 조회수를 목록에 표시
+3. 글에 들어갔을 때 조회수 +1
+4. (+심화) 작성자 이외의 사람만 카운팅
+
+### 좋아요 ! 기능 추가하기
+- 기본 0, 버튼을 누를때마다 +1
+    (+심화: 한사람이 1좋아요만 가능) 
+- 좋아요버튼 - 목록에 표시
+- 목록에 좋아요 버튼 + 좋아요 개수
+<개발 순서>
+1. post 테이블에 `likes` column 추가
+2. 좋아요 개수를 목록에 표시. 
+3. 좋아요 버튼 추가
+4. 좋아요 버튼 눌렀을 때 좋아요 수 +1
+
+### 댓글 기능 추가 (1) 댓글 표시하기
+1. (DB) 댓글 저장을 위한 TABLE 생성
+- table 명: `comments`
+2. (DB) `comments` 테이블에 샘플 데이터 추가
+- `insert into comments ....`
+3. (ejs) 게시글 페이지 하단에 댓글 표시할 html 추가 
+4. (index.js/ejs) 게시글에 달린 댓글 불러와서 화면에 표시
+- ejs에서 for 문 사용
+
+### 댓글 기능 추가 (2) 댓글 추가하기
+1. (ejs) 댓글 생성을 위한 html 추가
+- form 사용하기
+2. (index.js/ejs) 댓글 추가 기능 처리
+- post method 사용
+- 댓글 추가 완료 시 게시글 페이지(`/post/...`)로 redirect
+
+### 심화
+1. 댓글 삭제
+2. 댓글 수정
+3. 댓글 좋아요
+4. (심화-안배운거) 댓글 입력 시간 표시
+5. (심화-안배운거) 댓글 입력 순으로 정렬

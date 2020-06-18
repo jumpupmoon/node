@@ -8,6 +8,7 @@
         <%- include("./nav.ejs") %>
 
         <div class="container">
+            <input type="hidden" name="cnt" value="<%=comms.length %>">
             <div class="form-group">
                 <label for="inputUser">작성자</label>
                 <input type="text" class="form-control" id="inputUser" disabled value="<%=post.email %>">
@@ -36,5 +37,39 @@
             <% } %>
         </div>
 
+        <div class="container" style="margin-top: 50px;">
+            <form method="POST" action="/comment %>">
+                <input type="hidden" name="postId" value="<%=post.post_id %>">
+                <div class="form-group">
+                    <label for="inputDesc"><strong>댓글 작성</strong></label>
+                    <textarea name="desc" class="form-control" id="inputDesc" rows="2"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">완료</button>
+            </form>
+        </div>
+
+        <div class="container" style="margin-top: 50px;">
+            <% for(var comm of comms) { %>
+                <table class="table table-bordered">
+                    <tbody>
+                        <tr>
+                            <td>
+                                <h6>
+                                    <strong><%=comm.email %>님의 댓글</strong>
+                                    <% if(user.id == comm.user_id) { %>
+                                        <button type="button" class="btn btn-danger" onclick="location.href='/comment/delete/<%=post.post_id %>/<%=comm.comm_id %>'">삭제</button>
+                                    <% } %>
+                                </h6>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <textarea disabled="" class="form-control" rows="3"><%=comm.description %></textarea>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            <% } %>
+        </div>
     </body>
 </html>
