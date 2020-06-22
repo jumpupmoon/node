@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <%- include("./head.ejs") %>
+        <%- include("../head.ejs") %>
     </head>
 
     <body>
-        <%- include("./nav.ejs") %>
+        <%- include("../nav.ejs") %>
 
         <div class="container">
             <h2>글 목록</h2>
@@ -22,7 +22,7 @@
                 </thead>
                 <tbody>
                     <% posts.forEach(function(post, index) { %>
-                        <tr onclick="location.href='/post/<%=post.post_id %>'">
+                        <tr onclick="location.href='/post/detail/<%=post.post_id %>'">
                             <th scope="row"><%=posts.length-index %></th>
                             <td>
                                 <%=post.title %>
@@ -39,7 +39,7 @@
                 </tbody>
             </table>
             
-            <button type="button" class="btn btn-primary" onclick="location.href='/posts/create'">글쓰기</button>
+            <button type="button" class="btn btn-primary" onclick="location.href='/post/create'">글쓰기</button>
         </div>
     </body>
 </html>

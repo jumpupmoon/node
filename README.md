@@ -581,6 +581,7 @@ CREATE TABLE comments (
 5. EC2에 IP를 연결해서 IP로 프로젝트 접근
 (어려운버전)
 4, 5 동일
+6. ssh 접근 주소 // ec2 -> 인스턴스 -> 연결
 
 ### RDS
 1. 접속
@@ -664,3 +665,176 @@ $ sudo netstat -lpn | grep :3333
 $ kill -9 0000
 -> 0000에 id 입력
 ```
+
+
+# Day 8
+
+## PM2
+
+```
+$ npm i -g pm2 - pm2 설치
+$ pm2 start index.js - pm2로 node index.js 실행
+$ pm2 list - pm2 앱 목록 확인하기
+$ pm2 monit - pm2 모니터링
+$ pm2 stop 이름
+$ pm2 delete 이름
+```
+
+## nginx
+
+### nginx 설치
+
+1. `sudo apt-get update`: apt-get 명령어 업데이트
+2. `sudo apt-get install nginx`: nginx 설치
+3. `sudo systemctl start nginx`: nginx 서버 실행
+4. ec2의 ip 주소 들어가서 어떻게 나오는지 확인
+
+기본 설정 파일 확인하기
+
+1. `/var/www/html`
+2. `cd /etc/nginx/sites-available`
+3. `vi default`
+
+권한 수정
+
+1. `cd /var/www`
+2. `sudo chmod 777 html`
+
+파일 추가
+
+1. `/var/www/html` 경로에 폴더 생성
+2. 폴더에 프로젝트 파일 복사 (node_modules 제외)
+
+3. 프로젝트 경로로 이동
+4. `npm i` -> node_modules 설치
+5. `npm i -g pm2` -> pm2 패키지 설치
+6. `pm2 start index.js` -> pm2로 실행하기
+7. ip 포트 3333으로 실행 -> 프로젝트 실행 확인
+8. `sudo vi /etc/nginx/sites-available/default` -> 설정 파일로 이동
+9. `i` 눌러서 수정 모드
+10. proxy_pass를 설정
+
+    ```
+    server {
+        listen 80......
+
+        # index index....  -> 주석처리
+        location / {
+            proxy_pass http://localhost:3333;
+            ....
+        }
+    }
+    ```
+
+11. `esc`->`:wq` 수정한거 저장하고 끄기
+12. `sudo systemctl restart nginx`
+
+### Ec2 보안 그룹 설정
+
+- SSH / 내 IP로 설정
+  - 집에서 SSH로 접근하고 싶으면 aws에 IP 추가
+- HTTP / 위치 무관
+
+### 리팩토링
+
+1. [O] env 파일 분리
+2. routes 폴더 정리
+3. 쿼리용 db.js 생성 후 코드 정리
+
+#### 기존 폴더 구조
+
+- views
+- index.js
+
+#### 변경할 폴더 구조
+
+- routes - route 경로 마다 분리
+- index.js
+- db.js -> query 날리는 용도
+
+### ENV 설정
+
+1. `.env` 이름으로 파일 생성
+   ```
+   DB_HOST=".."
+   DB_PORT=3306
+   DB_USER.....
+   ...
+   ```
+2. 환경변수 입력
+3. `npm i --save dotenv`
+4. `index.js` 파일 상단에 `require('dotenv').config();`
+
+### Route 정리하기
+
+1. 기존 route 리스팅
+   - / -> index.js
+     - /
+     - /login
+     - /signup
+     - /logout
+     - /list
+   - /posts -> posts.js
+     - /
+     - /create
+   - /post -> post.js
+     - /:postId
+     - /delete/:postId
+     - /edit/:postId
+     - /like/:postId
+   - /comment -> comment.js
+     - /:postId
+
+
+### PM2 로 ENV 사용하기
+
+- process.json 만들기
+
+  ```
+  {
+    "apps": [
+      {
+        "name": "board",
+        "script": "node",
+        "args": "index.js",
+        "instances": 1,
+        "watch": true,
+        "exec_mode": "cluster",
+        "env": {
+          "DB_HOST": "...",
+          "DB_PORT": 3306,
+          "DB_USER": "root",
+          "DB_PASSWORD": "...",
+          "DB_DATABASE": "board",
+          "SESSION_SECRET": "..."
+        }
+      }
+    ]
+  }
+  ```
+
+- `pm2 start process.json`
+
+### ETC
+
+- [필독서](https://www.sangkon.com/good_books_for_dev_2018/)
+
+## Naming
+
+(ex. background color, power point)
+
+- Pascal Casing
+  - 첫단어 대문자
+  - ex. BackgroundColor, PowerPoint
+- Camel Casing
+  - 두번째 단어부터 대문자
+  - ex. backgroundColor, powerPoint
+- Snake casing
+  - 언더바
+  - ex. background_color, power_point
+- Kebab Casing
+  - 하이픈(-)
+  - ex. background-color, power-point
+- UPPER SNAKE CASE
+  - 대문자, 언더바
+  - ex. BACKGROUND_COLOR, POWER_POINT

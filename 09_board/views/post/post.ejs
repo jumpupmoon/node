@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <%- include("./head.ejs") %>
+        <%- include("../head.ejs") %>
     </head>
 
     <body>
-        <%- include("./nav.ejs") %>
+        <%- include("../nav.ejs") %>
 
         <div class="container">
             <input type="hidden" name="cnt" value="<%=comms.length %>">
@@ -25,7 +25,7 @@
                 <label for="inputContents">내용</label>
                 <textarea class="form-control" id="inputContents" disabled rows="10"><%=post.contents %></textarea>
             </div>
-            <button type="button" class="btn btn-info" onclick="location.href='/posts'">목록</button>
+            <button type="button" class="btn btn-info" onclick="location.href='/post/list'">목록</button>
             <% if(post.user_id == user.id) { %>
                 <button type="button" class="btn btn-secondary" onclick="location.href='/post/edit/<%=post.post_id %>'">수정</button>
                 <button type="button" class="btn btn-danger" onclick="location.href='/post/delete/<%=post.post_id %>'">삭제</button>
@@ -38,7 +38,7 @@
         </div>
 
         <div class="container" style="margin-top: 50px;">
-            <form method="POST" action="/comment %>">
+            <form method="POST" action="/post/comment %>">
                 <input type="hidden" name="postId" value="<%=post.post_id %>">
                 <div class="form-group">
                     <label for="inputDesc"><strong>댓글 작성</strong></label>
@@ -57,7 +57,7 @@
                                 <h6>
                                     <strong><%=comm.email %>님의 댓글</strong>
                                     <% if(user.id == comm.user_id) { %>
-                                        <button type="button" class="btn btn-danger" onclick="location.href='/comment/delete/<%=post.post_id %>/<%=comm.comm_id %>'">삭제</button>
+                                        <button type="button" class="btn btn-danger" onclick="location.href='/post/comment/delete/<%=post.post_id %>/<%=comm.comm_id %>'">삭제</button>
                                     <% } %>
                                 </h6>
                             </td>

@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <%- include("./head.ejs") %>
+        <%- include("../head.ejs") %>
     </head>
 
     <body>
-        <%- include("./nav.ejs") %>
+        <%- include("../nav.ejs") %>
 
         <div class="container">
             <h2>사용자 목록</h2>
@@ -19,13 +19,13 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <% for(var user of users) { %>
+                    <% users.forEach(function(user, index) { %>
                         <tr>
-                            <th scope="row"><%=user.id %></th>
+                            <th scope="row"><%=users.length-index %></th>
                             <td><%=user.email %></td>
                             <td><%=user.password %></td>
                         </tr>
-                    <% } %>
+                    <% }) %>
                 </tbody>
             </table>
         </div>  
